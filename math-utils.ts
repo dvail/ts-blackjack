@@ -51,8 +51,11 @@ export type Modulo<A extends number, B extends number> =
       ? A 
       : Modulo<Subtract<A, B>, B>;
 
+// Adds an item to the tuple
+export type Push<T extends any[], V> = [...T, V];
+
 // Remove the first element of a tuple
 export type Unshift<T extends any[]> =
   T extends [infer _, ...infer Rest] 
     ? Rest 
-    : never;
+    : [];
