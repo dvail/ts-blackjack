@@ -1,20 +1,6 @@
 import { Add, Length, LT, Modulo, Push, Subtract, Unshift } from './math-utils';
 
-type CardValues = {
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-  '6': 6,
-  '7': 7,
-  '8': 8,
-  '9': 9,
-  '10': 10,
-  'J': 10,
-  'Q': 10,
-  'K': 10,
-  'A': 11,
-};
+type CardValues = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11 };
 
 type Card = keyof CardValues;
 
@@ -25,8 +11,6 @@ type Deck = [
   'Q', '2', '3', '4', '5', 'J', '2', '3', 'Q', 'K', 'A', '9', '10', '8',
   '2', '3', '4', '6',  'K', 'A', '7', 'Q', '5', 'J',
 ];
-
-type ShoeSeed = Modulo<125, Length<Deck>>;
 
 type GetCard<Seed extends number> = Deck[Modulo<Seed, Length<Deck>>];
 
@@ -135,6 +119,22 @@ export type Hit<
     ? `PLAYER BUST! (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})`
     : `Player turn, (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})` 
 };
+
+// WIP
+export type Double<
+  State extends GameState,
+  NextState extends GameState = Hit<{
+    currentBet: Add<State['currentBet'], State['currentBet']>,
+    chips: Subtract<State['chips'], State['currentBet']>,
+    shoeIndex: State['shoeIndex'],
+    player: State['player'],
+    dealer: State['dealer'],
+  }>,
+  PlayerHandValue extends number = GetHandValue<NextState['player']>,
+  PlayerBust = LT<PlayerHandValue, 22> extends true ? false : true,
+> = PlayerBust extends true
+? NextState
+: Stand<NextState> ;
 
 export type Stand<
   State extends GameState,
