@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "None",
+    "module": "NodeNext",
     "noImplicitAny": true,
     "sourceMap": false,
     "outDir": "dist",
