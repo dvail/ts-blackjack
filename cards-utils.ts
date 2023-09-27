@@ -18,7 +18,7 @@ type CardValues = {
 
 type Card = keyof CardValues;
 
-// Create a deck of 52 Cards in random order
+// Create a deck of 52 Cards in "random" order
 type Deck = [
   'Q', 'K', '6', '7', '8', '9', '10', 'J', 'A', '2', '3', '4', '5',
   '7', '8', '9', '10', 'J', '6',  'K', 'A', '7', '8', '9', '10', '4', '5', '6',
@@ -31,12 +31,16 @@ type ShoeSeed = Modulo<125, Length<Deck>>;
 type GetCard<Seed extends number> = Deck[Modulo<Seed, Length<Deck>>];
 
 type HitPlayer<State extends GameState> = {
+  currentBet: State['currentBet'],
+  chips: State['chips'],
   shoeIndex: Add<State['shoeIndex'], 1>,
   player: [...State['player'], GetCard<State['shoeIndex']>],
   dealer: State['dealer'],
 };
 
 type HitDealer<State extends GameState> = {
+  currentBet: State['currentBet'],
+  chips: State['chips'],
   shoeIndex: Add<State['shoeIndex'], 1>,
   player: State['player'],
   dealer: [...State['dealer'], GetCard<State['shoeIndex']>],
@@ -67,71 +71,95 @@ type GetHandValue<Hand extends Card[]> =
   HandleAcesValue<SumHand<Hand>, CollectAces<Hand>>;
 
 type GameState = {
+  currentBet: number;
+  chips: number;
   shoeIndex: number;
   player: Card[],
   dealer: Card[],
 };
 
-type BlackJack = ['A', ('10' | 'J' | 'Q' | 'K')] | [('10' | 'J' | 'Q' | 'K'), 'A'];
+export type BlackJack = ['A', ('10' | 'J' | 'Q' | 'K')] | [('10' | 'J' | 'Q' | 'K'), 'A'];
 
-export type Deal<Seed extends number> = {
+type Init<Seed extends number, Bet extends number> = {
+    currentBet: Bet,
+    chips: 20,
     shoeIndex: Add<Seed, 4>,
     player: [GetCard<Seed>, GetCard<Add<Seed, 1>>],
-    dealer: [GetCard<Add<Seed, 2>>, GetCard<Add<Seed, 3>>],
-    status: GameState['player'] extends BlackJack
+    dealer: [GetCard<Add<Seed, 2>>, GetCard<Add<Seed, 3>>]
+};
+
+export type Play<Seed extends number, Bet extends number, State extends GameState = Init<Seed, Bet>> = {
+    currentBet: State['player'] extends BlackJack ? 0 : Bet,
+    chips: State['player'] extends BlackJack
+      ? Add<State['chips'], Bet>
+      : Subtract<State['chips'], Bet>,
+    shoeIndex: State['shoeIndex'],
+    player: State['player'],
+    dealer: State['dealer'],
+    status: State['player'] extends BlackJack
       ? 'BLACKJACK! You win!' 
       : `Player turn, hit or stand?`;
 }
+
+export type Deal<
+  State extends GameState, Bet extends number = 1,
+  PlayerCards = [GetCard<State['shoeIndex']>, GetCard<Add<State['shoeIndex'], 1>>],
+  DealerCards = [GetCard<Add<State['shoeIndex'], 2>>, GetCard<Add<State['shoeIndex'], 3>>]
+> = {
+    currentBet: PlayerCards extends BlackJack ? 0 : Bet,
+    chips: PlayerCards extends BlackJack
+      ? Add<State['chips'], Bet>
+      : Subtract<State['chips'], Bet>,
+    shoeIndex: Add<State['shoeIndex'], 4>,
+    player: PlayerCards,
+    dealer: DealerCards,
+    status: PlayerCards extends BlackJack
+      ? 'BLACKJACK! You win!' 
+      : `Player turn, hit or stand?`;
+}
+
 
 export type Hit<
   State extends GameState,
   NextState extends GameState = HitPlayer<State>,
   PlayerHandValue extends number = GetHandValue<NextState['player']>,
   DealerHandValue extends number = GetHandValue<NextState['dealer']>,
+  PlayerBust = LT<PlayerHandValue, 22> extends true ? false : true,
 > = {
+  currentBet: PlayerBust extends true ? 0 : State['currentBet'],
+  chips: State['chips'],
   shoeIndex: Add<State['shoeIndex'], 1>,
   player: NextState['player'],
   dealer: State['dealer'],
-  status: LT<PlayerHandValue, 22> extends true 
-    ? `Player turn, (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})` 
-    : `PLAYER BUST! (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})`,
+  status: PlayerBust extends true 
+    ? `PLAYER BUST! (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})`
+    : `Player turn, (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})` 
 };
 
 export type Stand<
   State extends GameState,
   PlayerHandValue extends number = GetHandValue<State['player']>,
   DealerHandValue extends number = GetHandValue<State['dealer']>,
-  DealerUnder17 extends boolean = LT<DealerHandValue, 17>,
+  DealerUnder17 = LT<DealerHandValue, 17>,
+  DealerBust = LT<DealerHandValue, 22> extends true ? false : true,
+  PlayerBeatsDealer = LT<DealerHandValue, PlayerHandValue>,
+  WinAmount = Add<State['currentBet'], State['currentBet']>
 > =
   DealerUnder17 extends true
     ? Stand<HitDealer<State>>
     : {
+      currentBet: 0,
+      chips: DealerBust extends true 
+        ? Add<State['chips'], WinAmount>
+        : PlayerBeatsDealer extends true
+          ? Add<State['chips'], WinAmount>
+          : State['chips']
       shoeIndex: Add<State['shoeIndex'], 1>,
       player: State['player'],
       dealer: State['dealer'],
-      status: LT<DealerHandValue, 22> extends false 
+      status: DealerBust extends true 
         ? `DEALER BUST, YOU WIN! (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})`
-        : LT<DealerHandValue, PlayerHandValue> extends true
+        : PlayerBeatsDealer extends true
           ? `YOU WIN! (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})`
           : `YOU LOSE! (Dealer: ${DealerHandValue}, You: ${PlayerHandValue})`
     }
-
-    /*
-type Test = Stand<{
-  shoeIndex: 0,
-  player: ['K', '7'],
-  dealer: ['3', '5'],
-}>
-
-type Test2 = Stand<{
-  shoeIndex: 0,
-  player: ['K', '7'],
-  dealer: ['K', '5'],
-}>
-
-type Test3 = Stand<{
-  shoeIndex: 0,
-  player: ['K', '7'],
-  dealer: ['K', '8'],
-}>
-*/
