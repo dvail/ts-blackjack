@@ -1,4 +1,6 @@
-// The majority of these utilities we derived from https://itnext.io/implementing-arithmetic-within-typescripts-type-system-a1ef140a6f6f
+// The majority of these utilities we derived from https://itnext.io/implementing-arithmetic-within-typescripts-type-system-a1ef140a6f6f and
+// are better implemented by the ts-arithmetic library. However, I wanted to show how to implement these
+// since it is more interesting.
 
 // Convert a tuple type to a numeric literal of its length
 export type Length<T extends any[]> = 

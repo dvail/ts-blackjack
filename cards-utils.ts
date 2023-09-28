@@ -39,6 +39,13 @@ type GetHandValue<Hand extends Card[]> = HandleAcesValue<SumHand<Hand>, CollectA
 
 type BlackJack = ['A', ('10' | 'J' | 'Q' | 'K')] | [('10' | 'J' | 'Q' | 'K'), 'A'];
 
+// TODO No implementation for "Push"
+// TODO No implementation for "Split"
+// TODO No implementation for "Surrender"
+// TODO No implementation for "Insurance"
+// TODO No implementation for BlackJack bonus
+// TODO No handling of dealer BlackJack
+
 type GameState = {
   winBonus: number;
   currentPoints: number;
