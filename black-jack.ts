@@ -1,5 +1,20 @@
 import { Deal, Double, Play, Hit, Stand } from "./cards-utils";
 
+
+
+
+
+
+
+
+
+
+
+
+
+// "Unit test" code below
+
+// Seed for "random", "shuffling" of deck
 type StartingSeed = 9;
 
 type Hand = Play<StartingSeed>;
@@ -39,6 +54,18 @@ type Round12 = Double<Hand11>;
 
 type Hand12 = Deal<Round12>;
 type Round13 = Double<Hand12>;
+/*
+  Working result:
+
+ type Round13 = {
+    winBonus: 0;
+    currentPoints: 19;
+    shoeIndex: 80;
+    player: ["9", "10", "6"];
+    dealer: ["4", "5"];
+    status: "PLAYER BUST! (Dealer: 9, You: 25)";
+}
+*/
 
 
 

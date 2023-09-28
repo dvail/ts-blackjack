@@ -1,4 +1,4 @@
-// Lots of help via https://itnext.io/implementing-arithmetic-within-typescripts-type-system-a1ef140a6f6f
+// The majority of these utilities we derived from https://itnext.io/implementing-arithmetic-within-typescripts-type-system-a1ef140a6f6f
 
 // Convert a tuple type to a numeric literal of its length
 export type Length<T extends any[]> = 
@@ -22,7 +22,6 @@ export type Subtract<A extends number, B extends number> =
     BuildTuple<A> extends [...(infer U), ...BuildTuple<B>]
         ? Length<U>
         : never;
-
 
 // Are two types equal?
 export type EQ<A, B> =

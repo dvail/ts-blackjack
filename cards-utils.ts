@@ -33,16 +33,17 @@ type HitDealer<State extends GameState> = {
 
 // Recurse and subtract 10 for each ace until the aces are gone or the value is under 22
 type HandleAcesValue<Value extends number, Aces extends 'A'[] = []> =
-  LT<Value, 22> extends true
-    ? Value
-    : Length<Aces> extends 0
-      ? Value
-      : HandleAcesValue<Subtract<Value, 10>, Unshift<Aces>>;
+  LT<Value, 22> extends true                           ? Value :
+  Aces extends [infer _, ...infer Rest extends 'A'[]]  ? HandleAcesValue<Subtract<Value, 10>, Rest> :
+  /* otherwise */                                        Value;
 
-type SumHand<Hand extends Card[], Value extends number = 0> =
-  Length<Hand> extends 0
-    ? Value
-    : SumHand<Unshift<Hand>, Add<CardValues[Hand[0]], Value>>;
+
+type SumHand<T extends Card[], Value extends number = 0> =
+  T extends [infer A extends Card, infer B extends Card, ...infer Rest extends Card[]] ? SumHand<[B, ...Rest], Add<CardValues[A], Value>> :
+  T extends [infer A extends Card, infer B extends Card]                               ? SumHand<[B], Add<CardValues[A], Value>> :
+  T extends [infer A extends Card]                                                     ? Add<CardValues[A], Value> :
+  /* otherwise */                                                                        Value;
+
 
 type CollectAces<Hand extends Card[], Aces extends 'A'[] = []> =
   Length<Hand> extends 0
@@ -63,7 +64,7 @@ type GameState = {
   dealer: Card[],
 };
 
-export type BlackJack = ['A', ('10' | 'J' | 'Q' | 'K')] | [('10' | 'J' | 'Q' | 'K'), 'A'];
+type BlackJack = ['A', ('10' | 'J' | 'Q' | 'K')] | [('10' | 'J' | 'Q' | 'K'), 'A'];
 
 type Init<Seed extends number, Bet extends number> = {
     winBonus: Bet,
